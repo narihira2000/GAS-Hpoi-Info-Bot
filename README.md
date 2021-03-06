@@ -13,6 +13,7 @@
 ## 部署說明
 - 基本上把各.gs內容copy到google app script上即可執行
 - 主要執行`hpoi.gs`中的main，並設為每10分鐘執行一次
+- `hpoi.gs`有使用 [cheerio](https://github.com/tani/cheeriogs) 作為分析網頁資料的工具，若要部屬請記得在資料庫的地方新增服務(版本選擇12)
 - 除了`hpoi.gs`以外的其他三個`.gs`檔皆須部署為網路應用程式並取得執行url
 - 所有需要的private的網址、token皆放在各檔案的前幾行，請自行部署得到這些值後填入
 - `line_data_sheet.gs`為`line_data.xlsx`的指令碼編輯器，而`hpoi_data_sheet.gs`為`hpoi_data.xlsx`的指令碼編輯器，使用方法為新建一試算表後點上方選單列的`工具>指令碼編輯器`即可打開google app script
