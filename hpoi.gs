@@ -2,12 +2,14 @@ var sheet_url = "";
 var line_data_sheet_url = "";
 var tg_channel_id = "";
 var tg_bot_token = "";
+//若有使用外部PaaS服務(如heroku)則需加入heroku的url
+var herokuUrl = "";
 
 
 function main() {
   var data = fetch_hpoi_data();
 
-  if(typeof data === "undefined"){
+  if (typeof data === "undefined") {
     console.log("website error");
     return;
   }
@@ -47,9 +49,22 @@ function main() {
   //照時間順序排列
   outputData.reverse();
 
-  //發送通知
+  //發送tg通知
   for (var i = 0; i < outputData.length; i++) {
     send_tg_notif(outputData[i]);
+  }
+
+  //寫入資料庫，因為line比較不穩，怕壞掉先寫入
+  write_latest_data(data[0].link_path, data[0].info_type, data[0].info_title);
+
+
+  //使用外部PaaS服務(如heroku)的方法，適用於人數較多的狀況
+  /*for (var i = 0; i < outputData.length; i++) {
+    heroku_send_line_notify(outputData[i]);
+  }*/
+
+  //發送line通知，人數少可使用此方法，另新增使用外部PaaS服務(如heroku)的方法於前一行
+  for (var i = 0; i < outputData.length; i++) {
 
     //送line通知，人數多的話可能要找其他服務，因為google一天只給fetch兩萬次
     var flag = 0;
@@ -71,8 +86,20 @@ function main() {
     }
   }
 
-  write_latest_data(data[0].link_path, data[0].info_type, data[0].info_title);
 
+}
+
+
+//使用外部PaaS服務(如heroku)的方法，適用於人數較多的狀況
+function heroku_send_line_notify(outputData) {
+  var res = UrlFetchApp.fetch(herokuUrl, {
+    'contentType': 'application/json; charset=utf-8',
+    'method': 'post',
+    'payload': JSON.stringify({
+      'output_data': outputData
+    })
+  });
+  console.log(res.getContentText());
 }
 
 
@@ -98,12 +125,17 @@ function fetch_hpoi_data() {
       Utilities.sleep(5000);
       res = UrlFetchApp.fetch(url, request_body);
     }
+    //bad gateway
+    if (error.toString().includes("502")) {
+      console.log("502 bad gateway");
+      return;
+    }
   }
 
   const html = res.getContentText();
 
   //hpoi的api暫時掛掉時好像會有"出錯了"的訊息
-  if(html.includes("出错了!")){
+  if (html.includes("出错了!")) {
     return;
   }
 
@@ -172,7 +204,7 @@ function fetch_tags(link_path) {
     if (/^\d+\/\d+$/.test(tmp)) {
       tmp = tmp.replace('/', '比');
     }
-    tmp = tmp.replace(/\s|\/|\.|-|：|:|-|（|）|＜|＞|@|·|~|\+|=|\||\{|\(|\)|}|\[|\]|\'|`|\*|・|\"|\&|～|\#|\”|\！/gi, '_').replace(/!/g, "");
+    tmp = tmp.replace(/\s|\/|\.|-|：|:|-|（|）|＜|＞|@|·|~|\+|=|\||\{|\(|\)|}|\[|\]|\'|`|\*|・|\"|\&|～|\#|\”|\！|\―|\│|\▌|\。|\，|\、|\；|\？|\／|\＃|\〈|\〉/gi, '_').replace(/!/g, "");
     if (tmp !== "" && tmp !== "未知" && tmp !== "点击进入") {
       //移除重複的"_"號
       tmp = remove_repeation_mark(tmp);
@@ -232,7 +264,7 @@ function write_latest_data(link_path, info_type, info_title) {
 function send_tg_notif(data) {
 
   var url = "https://api.telegram.org/bot" + tg_bot_token + "/sendPhoto";
-  var caption = "【" + data.info_type + "】\n" +"<a href=\"https://www.hpoi.net/" + data.link_path + "\">" + data.info_title + "</a>\n\nTags:" + data.tag;
+  var caption = "【" + data.info_type + "】\n" + "<a href=\"https://www.hpoi.net/" + data.link_path + "\">" + data.info_title + "</a>\n\nTags:" + data.tag;
   var request_body = {
     'method': 'post',
     'payload': {
@@ -242,7 +274,8 @@ function send_tg_notif(data) {
       'photo': data.img_path,
       'disable_web_page_preview': true,
       'disable_notification': true
-    }
+    },
+    'muteHttpExceptions': true
   }
 
   try {
@@ -253,7 +286,7 @@ function send_tg_notif(data) {
   } catch (error) {
     console.log(error);
     error = error.toString();
-    if (error.includes("400") && error.includes("failed to get HTTP URL content")) {
+    if (error.includes("400")) {
       try {
 
         Utilities.sleep(500);
@@ -263,7 +296,7 @@ function send_tg_notif(data) {
       } catch (e) {
         console.log(e);
         e = e.toString();
-        if (e.includes("400") && e.includes("failed to get HTTP URL content")) {
+        if (e.includes("400")) {
           url = "https://api.telegram.org/bot" + tg_bot_token + "/sendMessage";
 
           request_body = {
@@ -317,7 +350,7 @@ function send_line_notify(data, token) {
       return "401";
     }
     //使用者沒有把line notify加入要接受通知的群組
-    else if(error.toString().includes("400") && error.toString().includes("LINE Notify account doesn't join group which you want to send.")){
+    else if (error.toString().includes("400") && error.toString().includes("LINE Notify account doesn't join group which you want to send.")) {
       return "400";
     }
     return "exception";
@@ -335,3 +368,39 @@ function get_line_user_token() {
   return tmp;
 }
 
+//用來手動檢查token是否過期
+function get_line_token_status() {
+  var request_body = {
+    'method': 'get'
+  }
+  var res = UrlFetchApp.fetch(line_data_sheet_url + "?action=getAll", request_body);
+  var tmp = JSON.parse(res.getContentText());
+
+  for (var i = 0; i < tmp.length; i++) {
+    request_body = {
+      'headers': {
+        'Authorization': 'Bearer ' + tmp[i],
+      },
+      'method': 'get'
+    }
+    var url = "https://notify-api.line.me/api/status";
+    try {
+      var res = UrlFetchApp.fetch(url, request_body);
+    } catch (error) {
+      console.log(error.toString());
+      //使用者解除訂閱
+      if (error.toString().includes("401") && error.toString().includes("Invalid access token")) {
+        console.log("401");
+        var durl = line_data_sheet_url + "?action=deleteByToken&deleteToken=" + tmp[i];
+        request_body = {
+          'method': 'get'
+        }
+        UrlFetchApp.fetch(durl, request_body);
+      }
+      //使用者沒有把line notify加入要接受通知的群組
+      else if (error.toString().includes("400") && error.toString().includes("LINE Notify account doesn't join group which you want to send.")) {
+        console.log("400");
+      }
+    }
+  }
+}
