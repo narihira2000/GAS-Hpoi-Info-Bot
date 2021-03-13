@@ -1,6 +1,7 @@
 # GAS-Hpoi-Info-Bot
 - 一個利用Google App Script當作後端去抓取Hpoi手辦維基情報並發送通知到telegram和line notify的Bot
 - 每十分鐘執行一次
+- [介紹文](https://forum.gamer.com.tw/C.php?bsn=60036&snA=55976)
 - inspired by [ntzyz/hpoi-info-tgbot](https://github.com/ntzyz/hpoi-info-tgbot)
 
 ## 機器人網址
