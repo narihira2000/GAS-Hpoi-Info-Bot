@@ -103,6 +103,24 @@ function doPost(e) {
         return ContentService.createTextOutput("查無使用者資料，請先訂閱通知，謝謝!");
       }
       break;
+    case ("delete_all_keys"):
+      var userId = params.userId;
+      var flag = 0;
+
+      for (var i = 2; i <= LastRow; i++) {
+        var uid = Sheet.getRange(i, 1).getValue();
+        if (userId === uid) {
+          flag = 1;
+          Sheet.getRange(i, 4).setValue("");
+        }
+      }
+      if (flag) {
+        return ContentService.createTextOutput("刪除成功，目前清單內無任何東西");
+      }
+      else {
+        return ContentService.createTextOutput("查無使用者資料，請先訂閱通知，謝謝!");
+      }
+      break;
     default:
       break;
   }

@@ -28,14 +28,22 @@ def index():
         tasks = []
         for userData in userDatas:
             if userData['key'] != "":
-                tmp = userData['key']
+                tmp = userData['key'].upper()
                 arr = tmp.split(" ")
                 isFound = 0
+                isBlack = 0
                 for k in arr:
-                    if (k in data["info_type"]) or (k in data["info_title"]) or (k in data["tag"]):
+                    bk = ""
+                    if k[0] == "!" or k[0] == "！":
+                        bk = k[1:]
+                        if(bk):
+                            if (bk in data["info_type"]) or (bk in data["info_title"].upper()) or (bk in data["tag"].upper()):
+                                isBlack = 1
+                    elif (k in data["info_type"]) or (k in data["info_title"].upper()) or (k in data["tag"].upper()):
                         isFound = 1
-                        break
-                if isFound == 0:
+                # 關鍵字清單無符合，黑名單無符合 => 不傳送通知
+                # 關鍵字清單無符合，黑名單有符合 => 不傳送通知
+                if (isFound == 0 and isBlack == 0) or (isFound == 0 and isBlack == 1):
                     continue
             task = loop.create_task(send_line_notify(data, userData))
             tasks.append(task)
