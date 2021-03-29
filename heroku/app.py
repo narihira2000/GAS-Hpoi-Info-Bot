@@ -32,18 +32,21 @@ def index():
                 arr = tmp.split(" ")
                 isFound = 0
                 isBlack = 0
+                ct = 0
                 for k in arr:
                     bk = ""
                     if k[0] == "!" or k[0] == "！":
                         bk = k[1:]
                         if(bk):
+                            # 計算key中是否全為黑名單
+                            ct += 1
                             if (bk in data["info_type"]) or (bk in data["info_title"].upper()) or (bk in data["tag"].upper()):
                                 isBlack = 1
                     elif (k in data["info_type"]) or (k in data["info_title"].upper()) or (k in data["tag"].upper()):
                         isFound = 1
-                # 關鍵字清單無符合，黑名單無符合 => 不傳送通知
+                # 關鍵字清單無符合，黑名單無符合，且有關鍵字清單內容 => 不傳送通知
                 # 關鍵字清單無符合，黑名單有符合 => 不傳送通知
-                if (isFound == 0 and isBlack == 0) or (isFound == 0 and isBlack == 1):
+                if (isFound == 0 and isBlack == 0 and ct < len(arr)) or (isFound == 0 and isBlack == 1):
                     continue
             task = loop.create_task(send_line_notify(data, userData))
             tasks.append(task)
