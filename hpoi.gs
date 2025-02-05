@@ -4,6 +4,7 @@ var tg_channel_id = "";
 var tg_bot_token = "";
 //若有使用外部PaaS服務(如heroku)則需加入heroku的url
 var herokuUrl = "";
+const tgbot_notify_url = ""
 
 
 function main() {
@@ -63,6 +64,9 @@ function main() {
     heroku_send_line_notify(outputData[i]);
   }*/
 
+  //發送tgbot通知
+  send_tgbot_notify(outputData);
+
   //發送line通知，人數少可使用此方法，另新增使用外部PaaS服務(如heroku)的方法於前一行
   for (var i = 0; i < outputData.length; i++) {
 
@@ -100,6 +104,26 @@ function heroku_send_line_notify(outputData) {
     })
   });
   console.log(res.getContentText());
+}
+
+function send_tgbot_notify(outputDatas) {
+  let requestArr = [];
+
+  for (let j = 0; j < outputDatas.length; j++) {
+    requestArr.push({
+      'url': tgbot_notify_url,
+      'contentType': 'application/json; charset=utf-8',
+      'method': 'post',
+      'payload': JSON.stringify({
+        'output_data': outputDatas[j]
+      }),
+      'muteHttpExceptions': true
+    })
+  }
+
+  UrlFetchApp.fetchAll(requestArr);
+
+  console.log("send tgbot notify");
 }
 
 
