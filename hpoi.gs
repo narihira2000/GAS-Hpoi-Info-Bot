@@ -1,27 +1,27 @@
-var sheet_url = "";
-var line_data_sheet_url = "";
-var tg_channel_id = "";
-var tg_bot_token = "";
+const sheet_url = "";
+const line_data_sheet_url = "";
+const tg_channel_id = "";
+const tg_bot_token = "";
 //若有使用外部PaaS服務(如heroku)則需加入heroku的url
-var herokuUrl = "";
+const herokuUrl = "";
 const tgbot_notify_url = ""
 
 
 function main() {
-  var data = fetch_hpoi_data();
+  let data = fetch_hpoi_data();
 
   if (typeof data === "undefined") {
     console.log("website error");
     return;
   }
 
-  var last_data = get_last_data();
-  var tokens = [];
+  let last_data = get_last_data();
+  let tokens = [];
   tokens = get_line_user_token();
 
   //比對資料
-  var outputData = [];
-  for (var i = 0; i < data.length; i++) {
+  let outputData = [];
+  for (let i = 0; i < data.length; i++) {
     if (last_data.hobby_id === data[i].link_path && last_data.info_type === data[i].info_type && last_data.title === data[i].info_title) {
       console.log("same");
       console.log(data[i]);
@@ -36,7 +36,7 @@ function main() {
     }
 
     //把資料簡轉繁並fetch個別的tags
-    var tmp = {
+    let tmp = {
       link_path: data[i].link_path,
       info_type: LanguageApp.translate(data[i].info_type, 'zh_CN', "zh_TW"),
       info_title: LanguageApp.translate(data[i].info_title, 'zh_CN', "zh_TW"),
@@ -51,7 +51,7 @@ function main() {
   outputData.reverse();
 
   //發送tg通知
-  for (var i = 0; i < outputData.length; i++) {
+  for (let i = 0; i < outputData.length; i++) {
     send_tg_notif(outputData[i]);
   }
 
@@ -60,7 +60,7 @@ function main() {
 
 
   //使用外部PaaS服務(如heroku)的方法，適用於人數較多的狀況
-  /*for (var i = 0; i < outputData.length; i++) {
+  /*for (let i = 0; i < outputData.length; i++) {
     heroku_send_line_notify(outputData[i]);
   }*/
 
@@ -68,15 +68,15 @@ function main() {
   send_tgbot_notify(outputData);
 
   //發送line通知，人數少可使用此方法，另新增使用外部PaaS服務(如heroku)的方法於前一行
-  for (var i = 0; i < outputData.length; i++) {
+  for (let i = 0; i < outputData.length; i++) {
 
     //送line通知，人數多的話可能要找其他服務，因為google一天只給fetch兩萬次
-    var flag = 0;
-    for (var j = 0; j < tokens.length; j++) {
-      var status = send_line_notify(outputData[i], tokens[j]);
+    let flag = 0;
+    for (let j = 0; j < tokens.length; j++) {
+      let status = send_line_notify(outputData[i], tokens[j]);
       //如果使用者解除通知訂閱就把它從sheet裡刪掉
       if (status === "401") {
-        var url = line_data_sheet_url + "?action=deleteByToken&deleteToken=" + tokens[j];
+        let url = line_data_sheet_url + "?action=deleteByToken&deleteToken=" + tokens[j];
         const request_body = {
           'method': 'get'
         }
@@ -96,7 +96,7 @@ function main() {
 
 //使用外部PaaS服務(如heroku)的方法，適用於人數較多的狀況
 function heroku_send_line_notify(outputData) {
-  var res = UrlFetchApp.fetch(herokuUrl, {
+  let res = UrlFetchApp.fetch(herokuUrl, {
     'contentType': 'application/json; charset=utf-8',
     'method': 'post',
     'payload': JSON.stringify({
@@ -128,7 +128,7 @@ function send_tgbot_notify(outputDatas) {
 
 
 function fetch_hpoi_data() {
-  var url = "https://www.hpoi.net/user/home/ajax";
+  let url = "https://www.hpoi.net/user/home/ajax";
   const request_body = {
     'method': 'post',
     'payload': {
@@ -138,7 +138,7 @@ function fetch_hpoi_data() {
     }
   }
 
-  var res;
+  let res;
   try {
     res = UrlFetchApp.fetch(url, request_body);
   } catch (error) {
@@ -166,29 +166,29 @@ function fetch_hpoi_data() {
   const $ = Cheerio.load(html);
 
   //抓link path
-  var link_path = [];
+  let link_path = [];
   $('.overlay-container a[target="_blank"]').each(function () {
     link_path.push($(this).attr('href'));
   });
   // console.log(link_path);
 
   //抓title
-  var info_title = [];
+  let info_title = [];
   $('.home-info-content .user-content').each(function () {
     info_title.push($(this).text().trim());
   });
   // console.log(info_title);
 
   //抓取情報類型
-  var user_name = [];
+  let user_name = [];
   $('.home-info-content .user-name').each(function () {
     user_name.push($(this).text().trim().split(" ")[0].replace(/\n/g, ''));
   });
 
   //抓img
-  var img_path = [];
+  let img_path = [];
   $('.overlay-container img').each(function () {
-    var tmp = $(this).attr('src');
+    let tmp = $(this).attr('src');
     if (tmp.indexOf('?') > 0) {
       tmp = tmp.split('?')[0];
     }
@@ -196,8 +196,8 @@ function fetch_hpoi_data() {
   });
   // console.log(img_path);
 
-  var return_data = [];
-  for (var i = 0; i < link_path.length; i++) {
+  let return_data = [];
+  for (let i = 0; i < link_path.length; i++) {
     return_data.push({
       link_path: link_path[i],
       info_title: info_title[i],
@@ -211,18 +211,18 @@ function fetch_hpoi_data() {
 }
 
 function fetch_tags(link_path) {
-  var url = "https://www.hpoi.net/" + link_path;
+  let url = "https://www.hpoi.net/" + link_path;
   const request_body = {
     'method': 'get'
   }
-  var res = UrlFetchApp.fetch(url, request_body);
+  let res = UrlFetchApp.fetch(url, request_body);
   const html = res.getContentText();
   const $ = Cheerio.load(html);
 
   //抓tags
-  var tags = "";
+  let tags = "";
   $('.col-md-17 table.info-box a[target="_blank"]').each(function () {
-    var tmp = $(this).text();
+    let tmp = $(this).text();
     tmp = tmp.trim();
     //escape telegram invalid tag
     if (/^\d+\/\d+$/.test(tmp)) {
@@ -249,8 +249,8 @@ function fetch_tags(link_path) {
 }
 
 function remove_repeation_mark(tmp) {
-  var result = tmp[0];
-  for (var i = 1; i < tmp.length; i++) {
+  let result = tmp[0];
+  for (let i = 1; i < tmp.length; i++) {
     if (tmp[i] !== tmp[i - 1]) {
       result += tmp[i];
     }
@@ -265,7 +265,7 @@ function get_last_data() {
   const request_body = {
     'method': 'get'
   }
-  var res = UrlFetchApp.fetch(sheet_url, request_body);
+  let res = UrlFetchApp.fetch(sheet_url, request_body);
 
   console.log(res.getContentText());
 
@@ -281,16 +281,16 @@ function write_latest_data(link_path, info_type, info_title) {
       title: info_title
     }
   }
-  var res = UrlFetchApp.fetch(sheet_url, request_body);
+  let res = UrlFetchApp.fetch(sheet_url, request_body);
 
   console.log(res.getContentText());
 }
 
 function send_tg_notif(data) {
 
-  var url = "https://api.telegram.org/bot" + tg_bot_token + "/sendPhoto";
-  var caption = "【" + data.info_type + "】\n" + "<a href=\"https://www.hpoi.net/" + data.link_path + "\">" + data.info_title + "</a>\n\nTags:" + data.tag;
-  var request_body = {
+  let url = "https://api.telegram.org/bot" + tg_bot_token + "/sendPhoto";
+  let caption = "【" + data.info_type + "】\n" + "<a href=\"https://www.hpoi.net/" + data.link_path + "\">" + data.info_title + "</a>\n\nTags:" + data.tag;
+  let request_body = {
     'method': 'post',
     'payload': {
       'chat_id': tg_channel_id,
@@ -344,9 +344,9 @@ function send_tg_notif(data) {
 
 function send_line_notify(data, token) {
   try {
-    var url = "https://notify-api.line.me/api/notify";
+    let url = "https://notify-api.line.me/api/notify";
 
-    var caption = "\n【" + data.info_type + "】\n" + data.info_title + "\nhttps://www.hpoi.net/" + data.link_path + "?openExternalBrowser=1\n\nTags:" + data.tag;
+    let caption = "\n【" + data.info_type + "】\n" + data.info_title + "\nhttps://www.hpoi.net/" + data.link_path + "?openExternalBrowser=1\n\nTags:" + data.tag;
 
     const request_body = {
       'headers': {
@@ -360,7 +360,7 @@ function send_line_notify(data, token) {
       }
     }
 
-    var res = UrlFetchApp.fetch(url, request_body);
+    let res = UrlFetchApp.fetch(url, request_body);
     console.log(res.getContentText());
 
     if (res.getResponseCode() === 200) {
@@ -386,37 +386,37 @@ function get_line_user_token() {
   const request_body = {
     'method': 'get'
   }
-  var res = UrlFetchApp.fetch(line_data_sheet_url + "?action=getAll", request_body);
+  let res = UrlFetchApp.fetch(line_data_sheet_url + "?action=getAll", request_body);
 
-  var tmp = JSON.parse(res.getContentText());
+  let tmp = JSON.parse(res.getContentText());
 
   return tmp;
 }
 
 //用來手動檢查token是否過期
 function get_line_token_status() {
-  var request_body = {
+  let request_body = {
     'method': 'get'
   }
-  var res = UrlFetchApp.fetch(line_data_sheet_url + "?action=getAll", request_body);
-  var tmp = JSON.parse(res.getContentText());
+  let res = UrlFetchApp.fetch(line_data_sheet_url + "?action=getAll", request_body);
+  let tmp = JSON.parse(res.getContentText());
 
-  for (var i = 0; i < tmp.length; i++) {
+  for (let i = 0; i < tmp.length; i++) {
     request_body = {
       'headers': {
         'Authorization': 'Bearer ' + tmp[i],
       },
       'method': 'get'
     }
-    var url = "https://notify-api.line.me/api/status";
+    let url = "https://notify-api.line.me/api/status";
     try {
-      var res = UrlFetchApp.fetch(url, request_body);
+      let res = UrlFetchApp.fetch(url, request_body);
     } catch (error) {
       console.log(error.toString());
       //使用者解除訂閱
       if (error.toString().includes("401") && error.toString().includes("Invalid access token")) {
         console.log("401");
-        var durl = line_data_sheet_url + "?action=deleteByToken&deleteToken=" + tmp[i];
+        let durl = line_data_sheet_url + "?action=deleteByToken&deleteToken=" + tmp[i];
         request_body = {
           'method': 'get'
         }

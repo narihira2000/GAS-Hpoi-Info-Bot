@@ -184,7 +184,7 @@ function delete_all_keys(userId) {
       userId: userId
     }
   }
-  var res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
+  let res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
 
   console.log(res.getContentText());
   return res.getContentText();
@@ -199,7 +199,7 @@ function write_keyword(userId, key) {
       keys: key
     }
   }
-  var res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
+  let res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
 
   console.log(res.getContentText());
   return res.getContentText();
@@ -214,7 +214,7 @@ function delete_keyword(userId, key) {
       keys: key
     }
   }
-  var res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
+  let res = UrlFetchApp.fetch(telegramDatasheetUrl, request_body);
 
   console.log(res.getContentText());
   return res.getContentText();
@@ -224,7 +224,7 @@ function get_key_list(userId) {
   const request_body = {
     'method': 'get'
   }
-  var res = UrlFetchApp.fetch(telegramDatasheetUrl + "?action=getKeysById&uid=" + userId, request_body);
+  let res = UrlFetchApp.fetch(telegramDatasheetUrl + "?action=getKeysById&uid=" + userId, request_body);
 
   console.log(res.getContentText());
   return res.getContentText();
