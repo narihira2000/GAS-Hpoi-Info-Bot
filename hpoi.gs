@@ -128,26 +128,18 @@ function send_tgbot_notify(outputDatas) {
 
 
 function fetch_hpoi_data() {
-  let url = "https://www.hpoi.net/user/home/ajax";
-  const request_body = {
-    'method': 'post',
-    'payload': {
-      'page': 1,
-      'type': 'info',
-      'catType': 'all'
-    }
-  }
+  let url = "https://www.hpoi.net/user/home?categoryId=0&actionType=401";
 
   let res;
   try {
-    res = UrlFetchApp.fetch(url, request_body);
+    res = UrlFetchApp.fetch(url);
   } catch (error) {
     console.log(error);
     //time out
     if (error.toString().includes("504")) {
       console.log("504 occured");
       Utilities.sleep(5000);
-      res = UrlFetchApp.fetch(url, request_body);
+      res = UrlFetchApp.fetch(url);
     }
     //bad gateway
     if (error.toString().includes("502")) {
